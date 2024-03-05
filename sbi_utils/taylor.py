@@ -554,7 +554,7 @@ class Video_Dataset(Dataset):
 				videoname=self.image_list[idx]
 				labels = []
 				imgs = []
-				for frame_idx in range(32):
+				for frame_idx in range(self.n_frames):
 					start = random.randint(0, 100)
 					filename = videoname + '/' + str(start + frame_idx).zfill(3) + '.png'
 
@@ -622,7 +622,6 @@ class Video_Dataset(Dataset):
 		additional_targets={f'image1': 'image'},
 		p=1.)
 
-
 	def randaffine(self,img,mask):
 		f=alb.Affine(
 				translate_percent={'x':(-0.03,0.03),'y':(-0.015,0.015)},
@@ -644,7 +643,6 @@ class Video_Dataset(Dataset):
 		transformed=g(image=img,mask=mask)
 		mask=transformed['mask']
 		return img,mask
-
 		
 	def self_blending(self,img,landmark):
 		H,W=len(img),len(img[0])
@@ -743,21 +741,13 @@ class Video_Dataset(Dataset):
 			mask=None
 		img=img[:,::-1].copy()
 		return img,mask,landmark_new,bbox_new
-	
-	def collate_fn(self,batch):
-		img_f,img_r=zip(*batch)
-		data={}
-		data['img']=torch.cat([torch.tensor(img_r).float(),torch.tensor(img_f).float()],0).float()
-		data['label']=torch.tensor([0]*len(img_r)+[1]*len(img_f)).float()
-		return data
 
 	def collate_fn(self,batch):
 		videos,labels=zip(*batch)
 		data={}
-		data['video']=torch.tensor(videos)
-		data['label']=torch.tensor(labels)
+		data['video']=torch.tensor(videos).float()
+		data['label']=torch.tensor(labels).float()
 		return data
-		
 
 	def worker_init_fn(self,worker_id):                                                          
 		np.random.seed(np.random.get_state()[1][0] + worker_id)

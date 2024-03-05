@@ -65,8 +65,8 @@ def main(args):
 
     image_size=cfg['image_size']
     batch_size=cfg['batch_size']
-    train_data_set=Video_Dataset(phase='train',image_size=image_size)
-    val_data_set=Video_Dataset(phase='val',image_size=image_size)
+    train_data_set=Video_Dataset(phase='train',image_size=image_size,n_frames=32)
+    val_data_set=Video_Dataset(phase='val',image_size=image_size,n_frames=32)
 
     # 给每个rank对应的进程分配训练的样本索引
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_data_set)
@@ -169,7 +169,7 @@ def main(args):
         for step,data in enumerate(tqdm(train_loader)):
             img=data['video'].to(device, non_blocking=True).float()
             img = img.permute(0, 2, 1, 3, 4)
-            target=data['label'].to(device, non_blocking=True).long()
+            target=data['label'].to(device, non_blocking=True).long()[0]
             output=train_deepfake_one_epoch(img, target, model, optimizer)
             loss=criterion(output,target)
             loss_value=loss.item()
@@ -196,7 +196,7 @@ def main(args):
         np.random.seed(seed)
         for step,data in enumerate(tqdm(val_loader)):
             img=data['img'].to(device, non_blocking=True).float()
-            target=data['label'].to(device, non_blocking=True).long()
+            target=data['label'].to(device, non_blocking=True).long()[0]
             
             with torch.no_grad():
                 output=model(img)

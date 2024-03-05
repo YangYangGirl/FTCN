@@ -160,7 +160,7 @@ if __name__ == "__main__":
 
         with torch.no_grad():
             import pdb; pdb.set_trace()
-            output = classifier(images)
+            output = classifier(images) # [1, 3, 32, 224, 224]
 
         pred = float(output["final_output"])
         for f_id in frame_ids:

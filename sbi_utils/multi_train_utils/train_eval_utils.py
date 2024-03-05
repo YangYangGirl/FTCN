@@ -6,21 +6,37 @@ from torch import nn
 
 from sbi_utils.multi_train_utils.distributed_utils import reduce_value, is_main_process
 
+# def train_deepfake_one_epoch(x, target, model, optimizer):
+#     for i in range(2):
+#         pred_cls=model(x)['final_output']
+#         if i==0:
+#             pred_first=pred_cls
+#         loss_func=nn.CrossEntropyLoss()
+#         loss_cls=loss_func(pred_cls,target)
+#         loss=loss_cls
+#         optimizer.zero_grad()
+#         loss.backward()
+#         if i==0:
+#             optimizer.first_step(zero_grad=True)
+#         else:
+#             optimizer.second_step(zero_grad=True)
+#     return pred_first
+
+
 def train_deepfake_one_epoch(x, target, model, optimizer):
-    for i in range(2):
-        pred_cls=model(x)
-        if i==0:
-            pred_first=pred_cls
-        loss_func=nn.CrossEntropyLoss()
-        loss_cls=loss_func(pred_cls,target)
-        loss=loss_cls
-        optimizer.zero_grad()
-        loss.backward()
-        if i==0:
-            optimizer.first_step(zero_grad=True)
-        else:
-            optimizer.second_step(zero_grad=True)
-    return pred_first
+    pred_cls=model(x)['final_output']
+    loss_func=nn.CrossEntropyLoss()
+    print('pred_cls = ', pred_cls)
+    print('target = ', target)
+    
+    loss=loss_func(pred_cls,target)
+    print('loss = ', loss)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+
+    return pred_cls
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch):

@@ -40,7 +40,7 @@ SOLVER:
   WARMUP_START_LR: 0.01
   OPTIMIZING_METHOD: sgd
 MODEL:
-  NUM_CLASSES: 1
+  NUM_CLASSES: 2
   ARCH: i3d
   MODEL_NAME: ResNet
   LOSS_FUNC: cross_entropy
@@ -165,7 +165,7 @@ class TransformerHead(nn.Module):
                 default_params[key] = params[key]
         logger.info(default_params)
         self.time_T = TimeTransformer(
-            num_patches=self.num_patches, num_classes=1, **default_params
+            num_patches=self.num_patches, num_classes=2, **default_params
         )
         self.sigmoid = nn.Sigmoid()
 
@@ -177,7 +177,7 @@ class TransformerHead(nn.Module):
             x = self.fc(x.reshape(-1, self.in_channels))
             x = x.reshape(-1, self.num_patches, self.dim)
         x = self.time_T(x)
-        x = self.sigmoid(x)
+        # x = self.sigmoid(x)
         return x
 
 
