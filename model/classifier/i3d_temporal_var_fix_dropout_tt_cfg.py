@@ -341,6 +341,15 @@ class Classifier(ClassifierBase):
     def module_to_build(self) -> Type[nn.Module]:
         return I3D8x8
 
+    def training_step_normal(self,x,target):
+        pred_cls=self(x)["final_output"]
+        loss_cls=self.cel(pred_cls,target)
+        loss=loss_cls
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return pred_cls
+
     def training_step(self,x,target):
         for i in range(2):
             pred_cls=self(x)["final_output"]
