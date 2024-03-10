@@ -8,7 +8,7 @@ from PIL import Image
 import sys
 import random
 from sbi_utils.sbi import SBI_Dataset
-from sbi_utils.taylor_hdf5 import Taylor_Video_HDF5_Dataset
+from sbi_utils.rgb_video_hdf5 import Video_HDF5_Dataset
 from sbi_utils.scheduler import LinearDecayLR
 from sklearn.metrics import confusion_matrix, roc_auc_score
 import argparse
@@ -65,8 +65,8 @@ def main(args):
     image_size=cfg['image_size']
     batch_size=cfg['batch_size']
     print('image_size = ', image_size)
-    train_dataset=Taylor_Video_HDF5_Dataset(phase='train',image_size=image_size,n_frames=32)
-    val_dataset=Taylor_Video_HDF5_Dataset(phase='val',image_size=image_size,n_frames=32)
+    train_dataset=Video_HDF5_Dataset(phase='train',image_size=image_size,n_frames=32)
+    val_dataset=Video_HDF5_Dataset(phase='val',image_size=image_size,n_frames=32)
     
     # train_dataset=SBI_Dataset(phase='train',image_size=image_size)
     # val_dataset=SBI_Dataset(phase='val',image_size=image_size)
