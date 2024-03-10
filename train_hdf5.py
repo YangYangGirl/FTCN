@@ -106,21 +106,7 @@ def main(args):
     val_accs=[]
     val_losses=[]
     n_epoch=cfg['epoch']
-    
-    pg = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(pg, lr=0.0001)
-    scheduler = MultiStepLR(optimizer, gamma=1, milestones=[10, 20])
-
-    # pg = [p for p in model.parameters() if p.requires_grad]
-    # optimizer = optim.SGD(pg, lr=0.0001, momentum=0.9, weight_decay=0.005)
-    # lf = lambda x: ((1 + math.cos(x * math.pi / args.epochs)) / 2) * (1 - args.lrf) + args.lrf  # cosine
-    # scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-
-
-    # scheduler = MultiStepLR(optimizer, gamma = 1, milestones = [10, 20])
-    # Scheduler https://arxiv.org/pdf/1812.01187.pdf
-    # lf = lambda x: ((1 + math.cos(x * math.pi / args.epochs)) / 2) * (1 - args.lrf) + args.lrf  # cosine
-    # scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+    lr_scheduler=LinearDecayLR(model.optimizer, n_epoch, int(n_epoch/4*3))
     last_loss=99999
 
     now=datetime.now()
