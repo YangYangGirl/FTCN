@@ -68,7 +68,7 @@ from config import config as my_cfg
 from inspect import signature
 from .time_transformer import TimeTransformer
 import random
-
+from utils.sam import SAM
 
 class RandomPatchPool(nn.Module):
     def __init__(self):
@@ -329,7 +329,7 @@ class I3D8x8(nn.Module):
         output = {}
         output["final_output"] = pred
         return output
-
+    
 
 from torch import nn
 from typing import Callable, Type
@@ -340,3 +340,19 @@ class Classifier(ClassifierBase):
     @property
     def module_to_build(self) -> Type[nn.Module]:
         return I3D8x8
+
+    def training_step(self,x,target):
+        for i in range(2):
+            pred_cls=self(x)["final_output"]
+            if i==0:
+                pred_first=pred_cls
+            loss_cls=self.cel(pred_cls,target)
+            loss=loss_cls
+            self.optimizer.zero_grad()
+            loss.backward()
+            if i==0:
+                self.optimizer.first_step(zero_grad=True)
+            else:
+                self.optimizer.second_step(zero_grad=True)
+        
+        return pred_first

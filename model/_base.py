@@ -18,6 +18,7 @@ import inspect
 import traceback
 import functools
 from typing import Type
+from utils.sam import SAM
 
 #try:
 #    from apex.parallel import DistributedDataParallel as DDP
@@ -36,6 +37,9 @@ class ModelBase(nn.Module):
         super().__init__()
         self.network = self.build_network()
         self._warped_network = self.network
+        self.cel=nn.CrossEntropyLoss()
+        self.optimizer=SAM(self.parameters(),torch.optim.SGD,lr=0.0001, momentum=0.9)
+
 
     def forward(self, *input, **kwargs):
        return self._warped_network(*input, **kwargs)

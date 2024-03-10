@@ -307,7 +307,7 @@ class Taylor_Video_Dataset(Dataset):
 				videoname=self.image_list[idx]
 				labels = []
 				imgs = []
-				for frame_idx in range(8):
+				for frame_idx in range(self.n_frames):
 					
 					start = random.randint(0, 100)
 					filename = videoname + '/' + str(start + frame_idx).zfill(3) + '.png'

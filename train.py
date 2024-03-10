@@ -65,8 +65,8 @@ def main(args):
     image_size=cfg['image_size']
     batch_size=cfg['batch_size']
     print('image_size = ', image_size)
-    train_dataset=Video_Dataset(phase='train',image_size=image_size)
-    val_dataset=Video_Dataset(phase='val',image_size=image_size)
+    train_dataset=Video_Dataset(phase='train',image_size=image_size,n_frames=32)
+    val_dataset=Video_Dataset(phase='val',image_size=image_size,n_frames=32)
     
     # train_dataset=SBI_Dataset(phase='train',image_size=image_size)
     # val_dataset=SBI_Dataset(phase='val',image_size=image_size)
@@ -143,6 +143,7 @@ def main(args):
         model.train(mode=True)
         for step,data in enumerate(tqdm(train_loader)):
             img=data['video'].to(device, non_blocking=True).float()
+            img = img.permute(0, 2, 1, 3, 4)
             target=data['label'].to(device, non_blocking=True).long()[:, 0]
             output=model.training_step(img, target)
             loss=criterion(output,target)
