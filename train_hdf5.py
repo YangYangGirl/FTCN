@@ -157,10 +157,11 @@ def main(args):
         np.random.seed(seed)
         for step,data in enumerate(tqdm(val_loader)):
             img=data['video'].to(device, non_blocking=True).float()
+            img = img.permute(0, 2, 1, 3, 4)
             target=data['label'].to(device, non_blocking=True).long()[:, 0]
             
             with torch.no_grad():
-                output=model(img)
+                output=model(img)["final_output"]
                 loss=criterion(output,target)
             
             loss_value=loss.item()

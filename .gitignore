@@ -1,3 +1,6 @@
+*.log
+*sh.o*
+*sh.e*
 checkpoints/
 *.py[cod]
 *.pyc.*

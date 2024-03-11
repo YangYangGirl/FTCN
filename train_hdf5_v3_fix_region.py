@@ -8,7 +8,7 @@ from PIL import Image
 import sys
 import random
 from sbi_utils.sbi import SBI_Dataset
-from sbi_utils.rgb_video_hdf5 import Video_HDF5_Dataset
+from sbi_utils.rgb_video_fix_region_hdf5 import Video_Fix_Region_HDF5_Dataset
 from sbi_utils.scheduler import LinearDecayLR
 from sklearn.metrics import confusion_matrix, roc_auc_score
 import argparse
@@ -63,8 +63,8 @@ def main(args):
     image_size=cfg['image_size']
     batch_size=cfg['batch_size']
     print('image_size = ', image_size)
-    train_dataset=Video_HDF5_Dataset(phase='train',image_size=image_size,n_frames=32)
-    val_dataset=Video_HDF5_Dataset(phase='val',image_size=image_size,n_frames=32)
+    train_dataset=Video_Fix_Region_HDF5_Dataset(phase='train',image_size=image_size,n_frames=32)
+    val_dataset=Video_Fix_Region_HDF5_Dataset(phase='val',image_size=image_size,n_frames=32)
     
     # train_dataset=SBI_Dataset(phase='train',image_size=image_size)
     # val_dataset=SBI_Dataset(phase='val',image_size=image_size)
@@ -130,8 +130,6 @@ def main(args):
         train_acc=0.
         model.train(mode=True)
         for step,data in enumerate(tqdm(train_loader)):
-            if step > 5:
-                break
             img=data['video'].to(device, non_blocking=True).float()
             img = img.permute(0, 2, 1, 3, 4)
             target=data['label'].to(device, non_blocking=True).long()[:, 0]
