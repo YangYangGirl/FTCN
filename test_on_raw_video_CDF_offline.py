@@ -12,6 +12,7 @@ import argparse
 from tqdm import tqdm
 from dataset import *
 from sklearn.metrics import confusion_matrix, roc_auc_score
+import torchvision
 
 mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255,]).cuda().view(1, 3, 1, 1, 1)
 std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255,]).cuda().view(1, 3, 1, 1, 1)
@@ -152,10 +153,16 @@ if __name__ == "__main__":
                 assert len(post_module) == pad_length
 
                 pre_module = inner_index + inner_index[1:-1][::-1]
-                l_pre = len(pre_module)
+                l_pre = len(post_module)
                 pre_module = pre_module * (pad_length // l_pre + 1)
                 pre_module = pre_module[-pad_length:]
-                assert len(pre_module) == pad_length
+                try:
+                    assert len(pre_module) == pad_length
+                except:
+                    print("error in ", input_file)
+                    continue
+
+
                 inner_index = pre_module + inner_index + post_module
 
             super_clip_size = len(inner_index)
@@ -170,15 +177,19 @@ if __name__ == "__main__":
         preds = []
         frame_res = {}
 
-        for clip in clips_for_video:
+        # for clip in tqdm(clips_for_video, desc="testing"):
+        for clip_id, clip in enumerate(clips_for_video):
+            import pdb; pdb.set_trace()
             images = [data_storage[f"{i}_{j}_img"] for i, j in clip]
             landmarks = [data_storage[f"{i}_{j}_ldm"] for i, j in clip]
             frame_ids = [data_storage[f"{i}_{j}_idx"] for i, j in clip]
             landmarks, images = crop_align_func(landmarks, images)
+            torchvision.io.write_video(filename='output/video_raw_'+str(clip_id)+'.mp4', video_array=images, fps=3, video_codec='h264')
             images = torch.as_tensor(images, dtype=torch.float32).cuda().permute(3, 0, 1, 2)
             images = images.unsqueeze(0).sub(mean).div(std)
 
             with torch.no_grad():
+                # torchvision.io.write_video(filename='output/video.mp4', video_array=images[0].permute(1,2,3,0), fps=1, video_codec='h264')
                 output = classifier(images) # [1, 3, 32, 224, 224]
 
             pred = float(output["final_output"])
@@ -188,6 +199,7 @@ if __name__ == "__main__":
                 frame_res[f_id].append(pred)
             preds.append(pred)
 
+        import pdb; pdb.set_trace()
         print(np.mean(preds))
         output_list.append(np.mean(preds))
 
