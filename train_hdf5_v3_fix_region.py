@@ -32,16 +32,17 @@ from test_tools.faster_crop_align_xray import FasterCropAlignXRay
 from test_tools.supply_writer import SupplyWriter
 import argparse
 from tqdm import tqdm
+import math
 
 
 # Define the learning rate scheduler with warm-up and cosine annealing
 def warmup_cosine_annealing_lr(epoch, total_epochs=100):
-    if epoch < 10:
+    if epoch < 1:
         # Linear warm-up for the first 10 epochs
         return epoch / 10 * 0.1 + 0.01 * (1 - epoch / 10)
     else:
         # Cosine annealing for the last 90 epochs
-        return 0.5 * 0.1 * (1 + torch.cos((epoch - 10) / (total_epochs - 10) * torch.pi))
+        return 0.5 * 0.1 * (1 + math.cos((epoch - 10) / (total_epochs - 10) * math.pi))
 
 def compute_accuray(pred,true):
     pred_idx=pred.argmax(dim=1).cpu().data.numpy()
@@ -130,6 +131,8 @@ def main(args):
         train_acc=0.
         model.train(mode=True)
         for step,data in enumerate(tqdm(train_loader)):
+            if step > 3:
+                break
             img=data['video'].to(device, non_blocking=True).float()
             img = img.permute(0, 2, 1, 3, 4)
             target=data['label'].to(device, non_blocking=True).long()[:, 0]

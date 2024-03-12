@@ -36,7 +36,7 @@ class Video_HDF5_Dataset(Dataset):
 		
 		assert phase in ['train','val','test']
 		
-		self.data = h5py.File('data//FaceForensics++_hdf5/data.hdf5','r')
+		self.data = h5py.File('data//FaceForensics++_hdf5/data_new.hdf5','r')
 		image_list = np.load('data/FaceForensics++_hdf5/init_ff_video_image_list_' + phase + '.npy')
 		label_list = np.load('data/FaceForensics++_hdf5/init_ff_video_image_list_' + phase + '.npy')
 

@@ -36,7 +36,7 @@ class Video_Fix_Region_HDF5_Dataset(Dataset):
 		
 		assert phase in ['train','val','test']
 		
-		self.data = h5py.File('data//FaceForensics++_hdf5/data.hdf5','r')
+		self.data = h5py.File('data//FaceForensics++_hdf5/data_new.hdf5','r')
 		image_list = np.load('data/FaceForensics++_hdf5/init_ff_video_image_list_' + phase + '.npy')
 		label_list = np.load('data/FaceForensics++_hdf5/init_ff_video_image_list_' + phase + '.npy')
 
@@ -74,6 +74,10 @@ class Video_Fix_Region_HDF5_Dataset(Dataset):
 					start = random.randint(0, 100)
 					filename = videoname + '/' + str(start + frame_idx).zfill(3) + '.png'
 					start_filename = videoname + '/' + str(start).zfill(3) + '.png'
+					try:
+						frame = self.data[filename][:]
+					except:
+						print("error", filename)
 					frame = self.data[filename][:]
 					compression_params = [int(cv2.IMWRITE_JPEG_QUALITY), 100]
 					im = cv2.imdecode(frame, cv2.IMREAD_UNCHANGED)
@@ -99,7 +103,7 @@ class Video_Fix_Region_HDF5_Dataset(Dataset):
 					# 	if np.random.rand()<0.5:
 					# 		img,_,landmark,bbox=self.hflip(img,None,landmark,bbox)
 							
-					img,landmark,bbox,__=crop_face(img,landmark,bbox,margin=True,crop_by_bbox=False,phase='fix')
+					img,landmark,bbox,__=crop_face(img,landmark,bbox,margin=True,crop_by_bbox=False,phase='val')
 
 					img=cv2.resize(img,self.image_size,interpolation=cv2.INTER_LINEAR).astype('float32')/255
 
