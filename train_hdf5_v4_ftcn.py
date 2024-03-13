@@ -37,7 +37,7 @@ import math
 
 # Define the learning rate scheduler with warm-up and cosine annealing
 def warmup_cosine_annealing_lr(epoch, total_epochs=100):
-    if epoch < 1:
+    if epoch < 10:
         # Linear warm-up for the first 10 epochs
         return epoch / 10 * 0.1 + 0.01 * (1 - epoch / 10)
     else:
@@ -131,8 +131,6 @@ def main(args):
         train_acc=0.
         model.train(mode=True)
         for step,data in enumerate(tqdm(train_loader)):
-            if step > 3:
-                break
             img=data['video'].to(device, non_blocking=True).float()
             target=data['label'].to(device, non_blocking=True).long()[:, 0]
             output=model.training_step_normal(img, target)
