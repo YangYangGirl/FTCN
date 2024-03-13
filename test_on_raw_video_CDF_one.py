@@ -12,6 +12,8 @@ import argparse
 from tqdm import tqdm
 from dataset import *
 from sklearn.metrics import confusion_matrix, roc_auc_score
+import random
+import torchvision
 
 mean = torch.tensor([0.485 * 255, 0.456 * 255, 0.406 * 255,]).cuda().view(1, 3, 1, 1, 1)
 std = torch.tensor([0.229 * 255, 0.224 * 255, 0.225 * 255,]).cuda().view(1, 3, 1, 1, 1)
@@ -48,13 +50,15 @@ if __name__ == "__main__":
     classifier.eval()
     classifier.load("checkpoints/ftcn_tt.pth")
 
+    import pdb; pdb.set_trace()
     crop_align_func = FasterCropAlignXRay(cfg.imsize)
     
     os.makedirs(args.out_dir, exist_ok=True)
 
     output_list = []
     for input_file in tqdm(video_list):
-    
+        
+        import pdb; pdb.set_trace()
         basename = os.path.splitext(os.path.basename(input_file))[0] + ".avi"
         out_file = os.path.join(args.out_dir, basename)
 
@@ -163,22 +167,22 @@ if __name__ == "__main__":
             frame_range = [
                 inner_index[i : i + clip_size] for i in range(super_clip_size) if i + clip_size <= super_clip_size
             ]
+
             for indices in frame_range:
                 clip = [(super_clip_idx, t) for t in indices]
-                import pdb; pdb.set_trace()
                 clips_for_video.append(clip)
         
         preds = []
         frame_res = {}
 
-        for clip in clips_for_video:
+        for clip in random.sample(clips_for_video, 1):
             images = [data_storage[f"{i}_{j}_img"] for i, j in clip]
             landmarks = [data_storage[f"{i}_{j}_ldm"] for i, j in clip]
             frame_ids = [data_storage[f"{i}_{j}_idx"] for i, j in clip]
             landmarks, images = crop_align_func(landmarks, images)
 
             # save_path = clip[0]
-            # torchvision.io.write_video(filename=save_path, video_array=images, fps=3, video_codec='h264')
+            torchvision.io.write_video(filename='output/debug.mp4', video_array=images, fps=3, video_codec='h264')
 
             images = torch.as_tensor(images, dtype=torch.float32).cuda().permute(3, 0, 1, 2)
             images = images.unsqueeze(0).sub(mean).div(std)
@@ -186,32 +190,33 @@ if __name__ == "__main__":
             with torch.no_grad():
                 output = classifier(images) # [1, 3, 32, 224, 224]
 
-            pred = float(output["final_output"])
-            for f_id in frame_ids:
-                if f_id not in frame_res:
-                    frame_res[f_id] = []
-                frame_res[f_id].append(pred)
-            preds.append(pred)
 
-        print(np.mean(preds))
-        output_list.append(np.mean(preds))
+    #         pred = float(output["final_output"])
+    #         for f_id in frame_ids:
+    #             if f_id not in frame_res:
+    #                 frame_res[f_id] = []
+    #             frame_res[f_id].append(pred)
+    #         preds.append(pred)
 
-        boxes = []
-        scores = []
+    #     print(np.mean(preds))
+    #     output_list.append(np.mean(preds))
 
-        for frame_idx in range(len(frames)):
-            if frame_idx in frame_res:
-                pred_prob = np.mean(frame_res[frame_idx])
-                rect = frame_boxes[frame_idx]
-            else:
-                pred_prob = None
-                rect = None
-            scores.append(pred_prob)
-            boxes.append(rect)
+    #     boxes = []
+    #     scores = []
 
-        SupplyWriter(args.video, out_file, 0.002584857167676091).run(frames, scores, boxes)
-        scores = [s for s in scores if s]
-        print("averaged score = ", np.mean(scores))
+    #     for frame_idx in range(len(frames)):
+    #         if frame_idx in frame_res:
+    #             pred_prob = np.mean(frame_res[frame_idx])
+    #             rect = frame_boxes[frame_idx]
+    #         else:
+    #             pred_prob = None
+    #             rect = None
+    #         scores.append(pred_prob)
+    #         boxes.append(rect)
 
-    auc=roc_auc_score(target_list,output_list)
-    print(f'{args.dataset}| AUC: {auc:.4f}')
+    #     SupplyWriter(args.video, out_file, 0.002584857167676091).run(frames, scores, boxes)
+    #     scores = [s for s in scores if s]
+    #     print("averaged score = ", np.mean(scores))
+
+    # auc=roc_auc_score(target_list,output_list)
+    # print(f'{args.dataset}| AUC: {auc:.4f}')
