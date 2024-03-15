@@ -73,7 +73,7 @@ def main(args):
 
     train_loader=torch.utils.data.DataLoader(train_dataset,
                         batch_size=batch_size//2,
-                        shuffle=True,
+                        shuffle=False,
                         collate_fn=train_dataset.collate_fn,
                         num_workers=0,
                         pin_memory=True,
@@ -120,7 +120,6 @@ def main(args):
     logger = log(path=save_path+"logs/", file="losses.logs")
 
     criterion=nn.CrossEntropyLoss()
-
     last_auc=0
     last_val_auc=0
     weight_dict={}
@@ -130,11 +129,12 @@ def main(args):
         train_loss=0.
         train_acc=0.
         model.train(mode=True)
+        model.optimizer.zero_grad()
         for step,data in enumerate(tqdm(train_loader)):
             img=data['video'].to(device, non_blocking=True).float()
             target=data['label'].to(device, non_blocking=True).long()[:, 0]
-            output=model.training_step_normal(img, target)
-            loss=criterion(output,target)
+            output,loss=model.training_step_normal(img, target)
+            # loss=criterion(output,target)
             loss_value=loss.item()
             iter_loss.append(loss_value)
             train_loss+=loss_value

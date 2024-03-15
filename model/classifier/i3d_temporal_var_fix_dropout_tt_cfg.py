@@ -342,13 +342,12 @@ class Classifier(ClassifierBase):
         return I3D8x8
 
     def training_step_normal(self,x,target):
-        self.optimizer.zero_grad()
         pred_cls=self(x)["final_output"]
         loss=self.cel(pred_cls,target)
         loss.backward()
         self.optimizer.step()
         self.optimizer.zero_grad()
-        return pred_cls
+        return pred_cls, loss
 
     def training_step(self,x,target):
         for i in range(2):

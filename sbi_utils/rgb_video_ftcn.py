@@ -101,7 +101,7 @@ def ftcn_extract(input_file):
 	super_clips = []
 
 	for track_i, ((start, end), track) in enumerate(zip(tuples, tracks)):
-		print(start, end)
+		# print(start, end)
 		assert len(detect_res[start:end]) == len(track)
 
 		super_clips.append(len(track))
@@ -166,14 +166,18 @@ def ftcn_extract(input_file):
 	preds = []
 	frame_res = {}
 
-	for clip in random.sample(clips_for_video, 1):
+	for clip_idx, clip in enumerate(random.sample(clips_for_video, 10)):
 		images = [data_storage[f"{i}_{j}_img"] for i, j in clip]
 		landmarks = [data_storage[f"{i}_{j}_ldm"] for i, j in clip]
 		frame_ids = [data_storage[f"{i}_{j}_idx"] for i, j in clip]
 		landmarks, images = crop_align_func(landmarks, images)
 
 		# save_path = clip[0]
-		torchvision.io.write_video(filename='output/debug.mp4', video_array=images, fps=3, video_codec='h264')
+		out_file = input_file.replace('++', '-clip')
+		if not os.path.exist(out_file.rsplit('/', 2)[0]):
+			os.makedirs(out_file.rsplit('/', 2)[0])
+		
+		torchvision.io.write_video(filename=out_file.split('.mp4')[0] + '_' + str(clip_idx) + '.mp4', video_array=images, fps=3, video_codec='h264')
 		images = torch.as_tensor(images, dtype=torch.float32).cuda().permute(3, 0, 1, 2)
 		images = images.unsqueeze(0).sub(mean).div(std)
 
@@ -192,7 +196,7 @@ class Video_FTCN_Dataset(Dataset):
 		# image_list,label_list=init_ff_video_taylor(dataset='all',phase=phase)
 		# image_list,label_list=init_ff(phase,'frame',n_frames=n_frames)
 		
-		path_lm='/landmarks/' 
+		path_lm='/landmarks/'
 		# image_list=[image_list[i].replace('videos', 'frames').replace('.mp4', '') for i in range(len(image_list))]
 
 		# label_list=[label_list[i] for i in range(len(image_list)) if os.path.isfile(image_list[i].replace('/vid/',path_lm).replace('.png','.npy')) and os.path.isfile(image_list[i].replace('/frames/','/retina/').replace('.png','.npy'))]
@@ -212,31 +216,21 @@ class Video_FTCN_Dataset(Dataset):
 		return len(self.image_list)
 
 	def __getitem__(self,idx):
-		videoname=self.image_list[idx]
-		imgs = ftcn_extract(videoname)[0]
-		labels = []
-		if 'manipulated' in videoname:
-			labels.append(1)
-		else:
-			labels.append(0)
-		imgs=np.array(imgs.cpu())
-		labels=np.array(labels)
-
-		# flag=True
-		# while flag:
-		# 	try:
-		# 		videoname=self.image_list[idx]
-		# 		imgs = ftcn_extract(videoname)[0]
-		# 		if 'manipulated' in videoname:
-		# 			labels.append(1)
-		# 		else:
-		# 			labels.append(0)
-		# 		imgs=np.array(imgs)
-		# 		labels=np.array(labels)
-		# 		flag=False
-		# 	except Exception as e:
-		# 		print(e)
-		# 		idx=torch.randint(low=0,high=len(self),size=(1,)).item()
+		flag=True
+		while flag:
+			try:
+				videoname=self.image_list[idx]
+				imgs = ftcn_extract(videoname)[0]
+				labels = []
+				if 'manipulated' in videoname:
+					labels.append(1)
+				else:
+					labels.append(0)
+				imgs=np.array(imgs.cpu())
+				labels=np.array(labels)
+			except Exception as e:
+				print(e)
+				idx=torch.randint(low=0,high=len(self),size=(1,)).item()
 
 		return imgs,labels
 
@@ -391,12 +385,12 @@ class Video_FTCN_Dataset(Dataset):
 		img=img[:,::-1].copy()
 		return img,mask,landmark_new,bbox_new
 	
-	def collate_fn(self,batch):
-		img_f,img_r=zip(*batch)
-		data={}
-		data['img']=torch.cat([torch.tensor(img_r).float(),torch.tensor(img_f).float()],0).float()
-		data['label']=torch.tensor([0]*len(img_r)+[1]*len(img_f)).float()
-		return data
+	# def collate_fn(self,batch):
+	# 	img_f,img_r=zip(*batch)
+	# 	data={}
+	# 	data['img']=torch.cat([torch.tensor(img_r).float(),torch.tensor(img_f).float()],0).float()
+	# 	data['label']=torch.tensor([0]*len(img_r)+[1]*len(img_f)).float()
+	# 	return data
 
 	def collate_fn(self,batch):
 		videos,labels=zip(*batch)
@@ -405,7 +399,6 @@ class Video_FTCN_Dataset(Dataset):
 		data['label']=torch.tensor(labels)
 		return data
 		
-
 	def worker_init_fn(self,worker_id):                                                          
 		np.random.seed(np.random.get_state()[1][0] + worker_id)
 
