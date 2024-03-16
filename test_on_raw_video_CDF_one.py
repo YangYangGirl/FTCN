@@ -50,15 +50,12 @@ if __name__ == "__main__":
     classifier.eval()
     classifier.load("checkpoints/ftcn_tt.pth")
 
-    import pdb; pdb.set_trace()
     crop_align_func = FasterCropAlignXRay(cfg.imsize)
     
     os.makedirs(args.out_dir, exist_ok=True)
 
     output_list = []
     for input_file in tqdm(video_list):
-        
-        import pdb; pdb.set_trace()
         basename = os.path.splitext(os.path.basename(input_file))[0] + ".avi"
         out_file = os.path.join(args.out_dir, basename)
 

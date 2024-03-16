@@ -174,10 +174,12 @@ def ftcn_extract(input_file):
 
 		# save_path = clip[0]
 		out_file = input_file.replace('++', '-clip')
-		if not os.path.exist(out_file.rsplit('/', 2)[0]):
-			os.makedirs(out_file.rsplit('/', 2)[0])
+		if not os.path.exists(out_file.rsplit('/', 1)[0]):
+			os.makedirs(out_file.rsplit('/', 1)[0])
 		
-		torchvision.io.write_video(filename=out_file.split('.mp4')[0] + '_' + str(clip_idx) + '.mp4', video_array=images, fps=3, video_codec='h264')
+		save_dir = out_file.split('.mp4')[0] + '_' + str(clip_idx) + '.mp4'
+		# print("save_dir ", save_dir)
+		torchvision.io.write_video(filename=save_dir, video_array=images, fps=2, video_codec='h264')
 		images = torch.as_tensor(images, dtype=torch.float32).cuda().permute(3, 0, 1, 2)
 		images = images.unsqueeze(0).sub(mean).div(std)
 
@@ -192,6 +194,8 @@ class Video_FTCN_Dataset(Dataset):
 		# self.data = h5py.File('data//FaceForensics++_hdf5/data_new.hdf5','r')
 		image_list = np.load('data/FaceForensics++_hdf5/init_ff_video_image_list_' + phase + '.npy')
 		# label_list = np.load('data/FaceForensics++_hdf5/init_ff_video_image_list_' + phase + '.npy')
+
+		image_list=[image_list[i] for i in range(len(image_list)) if image_list[i].endswith('.mp4')]
 
 		# image_list,label_list=init_ff_video_taylor(dataset='all',phase=phase)
 		# image_list,label_list=init_ff(phase,'frame',n_frames=n_frames)
@@ -219,21 +223,28 @@ class Video_FTCN_Dataset(Dataset):
 		flag=True
 		while flag:
 			try:
+				print(idx, "... ", self.image_list[idx])
 				videoname=self.image_list[idx]
-				imgs = ftcn_extract(videoname)[0]
+				clip_idx = random.randint(0, 9)
+				images = torchvision.io.read_video(videoname.replace('++', '-clip').split('.mp4')[0] + '_' + str(clip_idx) + '.mp4')[0]
+				# imgs = ftcn_extract(videoname)[0]
+
+				images = torch.as_tensor(images, dtype=torch.float32).cuda().permute(3, 0, 1, 2)
+				images = images.unsqueeze(0).sub(mean).div(std)
+
 				labels = []
 				if 'manipulated' in videoname:
 					labels.append(1)
 				else:
 					labels.append(0)
-				imgs=np.array(imgs.cpu())
+				images=np.array(images.cpu()[0])
 				labels=np.array(labels)
+				flag = False
 			except Exception as e:
 				print(e)
 				idx=torch.randint(low=0,high=len(self),size=(1,)).item()
 
-		return imgs,labels
-
+		return images,labels
 
 	def get_source_transforms(self):
 		return alb.Compose([
@@ -384,13 +395,6 @@ class Video_FTCN_Dataset(Dataset):
 			mask=None
 		img=img[:,::-1].copy()
 		return img,mask,landmark_new,bbox_new
-	
-	# def collate_fn(self,batch):
-	# 	img_f,img_r=zip(*batch)
-	# 	data={}
-	# 	data['img']=torch.cat([torch.tensor(img_r).float(),torch.tensor(img_f).float()],0).float()
-	# 	data['label']=torch.tensor([0]*len(img_r)+[1]*len(img_f)).float()
-	# 	return data
 
 	def collate_fn(self,batch):
 		videos,labels=zip(*batch)
