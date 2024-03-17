@@ -41,7 +41,7 @@ if __name__ == "__main__":
         NotImplementedError
 
     cfg.init_with_yaml()
-    cfg.update_with_yaml("ftcn_tt_ori.yaml")
+    cfg.update_with_yaml("ftcn_tt.yaml")
     cfg.freeze()
 
     classifier = PluginLoader.get_classifier(cfg.classifier_type)() # 'i3d_temporal_var_fix_dropout_tt_cfg'
@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
             with torch.no_grad():
                 output = classifier(images) # [1, 3, 32, 224, 224]
-
-            pred = float(output["final_output"])
+                
+            pred = float(output["final_output"].softmax(1)[:,1].cpu().data.numpy().tolist())
             for f_id in frame_ids:
                 if f_id not in frame_res:
                     frame_res[f_id] = []

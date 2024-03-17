@@ -39,10 +39,10 @@ import math
 def warmup_cosine_annealing_lr(epoch, total_epochs=100):
     if epoch < 10:
         # Linear warm-up for the first 10 epochs
-        return epoch / 10 * 0.1 + 0.01 * (10 - epoch / 10)
+        return epoch / 10 * 0.1 + 0.01 * (10 - epoch / 10) / 10
     else:
         # Cosine annealing for the last 90 epochs
-        return 0.5 * 0.1 * (1 + math.cos((epoch - 10) / (total_epochs - 10) * math.pi))
+        return 0.5 * 0.1 * (1 + math.cos((epoch - 10) / (total_epochs - 10) * math.pi)) / 10
 
 def compute_accuray(pred,true):
     pred_idx=pred.argmax(dim=1).cpu().data.numpy()
