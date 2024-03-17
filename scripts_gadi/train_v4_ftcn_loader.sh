@@ -13,4 +13,4 @@
 export CONDA_ENV='/scratch/kf09/yy8664/miniconda3/bin/activate'
 source $CONDA_ENV ftcn
 
-python3 train_hdf5_v4_ftcn.py src/configs/ftcn/base.json -n train_hdf5_v4 > logs/train_hdf5_v4_long.log 2>&1
+python3 train_hdf5_v4_ftcn.py src/configs/ftcn/base.json -n train_hdf5_v4 > logs/train_hdf5_v4_offline.log 2>&1

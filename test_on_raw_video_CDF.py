@@ -165,7 +165,6 @@ if __name__ == "__main__":
             ]
             for indices in frame_range:
                 clip = [(super_clip_idx, t) for t in indices]
-                import pdb; pdb.set_trace()
                 clips_for_video.append(clip)
         
         preds = []
