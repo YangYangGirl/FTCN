@@ -95,6 +95,25 @@ def detect_all(file, sfd_only=False, return_frames=False, max_size=None):
         return detect_res, all_68, frames
 
 
+
+def detect_taylor_all(file, sfd_only=False, return_frames=False, max_size=None):
+    frames_taylor = grab_all_frames(file, max_size=max_size, cvt=True)
+    frames = grab_all_frames(file.replace('-taylor', '++'), max_size=max_size, cvt=True)
+    if not sfd_only:
+        detect_res = flatten(
+            [detector.detect(item) for item in partition(frames, 50)]
+        )
+        detect_res = get_valid_faces(detect_res, thres=0.5)
+    else:
+        raise NotImplementedError
+
+    all_68 = get_lm68(frames, detect_res)
+    if not return_frames:
+        return detect_res, all_68
+    else:
+        return detect_res, all_68, frames_taylor
+
+
 def get_lm68(frames, detect_res):
     assert len(frames) == len(detect_res)
     frame_count = len(frames)

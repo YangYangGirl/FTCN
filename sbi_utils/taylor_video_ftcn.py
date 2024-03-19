@@ -28,7 +28,7 @@ from utils.plugin_loader import PluginLoader
 import torch
 import os
 import numpy as np
-from test_tools.common import detect_all, grab_all_frames
+from test_tools.common import detect_taylor_all, detect_all, grab_all_frames
 from test_tools.utils import get_crop_box
 from test_tools.ct.operations import find_longest, multiple_tracking
 from test_tools.faster_crop_align_xray import FasterCropAlignXRay
@@ -54,7 +54,6 @@ crop_align_func = FasterCropAlignXRay(224)
 
 
 def ftcn_extract(input_file):
-	basename = os.path.splitext(os.path.basename(input_file))[0] + ".avi"
 	max_frame = 768
 	cache_file = f"{input_file}_{str(max_frame)}.pth"
 
@@ -64,7 +63,7 @@ def ftcn_extract(input_file):
 		# print("detection result loaded from cache")
 	else:
 		# print("detecting")
-		detect_res, all_lm68, frames = detect_all(
+		detect_res, all_lm68, frames = detect_taylor_all(
 			input_file, return_frames=True, max_size=max_frame
 		)
 		torch.save((detect_res, all_lm68), cache_file)
@@ -180,13 +179,15 @@ def ftcn_extract(input_file):
 		save_dir = out_file.split('.mp4')[0] + '_' + str(clip_idx) + '.mp4'
 		# print("save_dir ", save_dir)
 		torchvision.io.write_video(filename=save_dir, video_array=images, fps=2, video_codec='h264')
+		print(save_dir)
+		import pdb; pdb.set_trace()
 		images = torch.as_tensor(images, dtype=torch.float32).cuda().permute(3, 0, 1, 2)
 		images = images.unsqueeze(0).sub(mean).div(std)
 
 	return images
 
 
-class Video_FTCN_Dataset(Dataset):
+class Taylor_Video_FTCN_Dataset(Dataset):
 	def __init__(self,phase='train',image_size=224,n_frames=8):
 		
 		assert phase in ['train','val','test']
@@ -224,7 +225,7 @@ class Video_FTCN_Dataset(Dataset):
 		while flag:
 			try:
 				print(idx, "... ", self.image_list[idx])
-				videoname=self.image_list[idx]
+				videoname=self.image_list[idx].replace('++', '-taylor')
 
 				# offline
 				# clip_idx = random.randint(0, 9)

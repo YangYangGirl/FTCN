@@ -185,7 +185,7 @@ if __name__ == "__main__":
 
             with torch.no_grad():
                 output = classifier(images) # [1, 3, 32, 224, 224]
-                
+
             pred = float(output["final_output"].softmax(1)[:,1].cpu().data.numpy().tolist())
             for f_id in frame_ids:
                 if f_id not in frame_res:
